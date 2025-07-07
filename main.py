@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-TRACCAR_URL = 'https://d4fd-41-225-18-114.ngrok-free.app'
+TRACCAR_URL = 'https://1584-41-225-18-114.ngrok-free.app'
 
 TRACCAR_USER = 'hassanzorkot204@gmail.com'
 TRACCAR_PASS = 'hassan@2004'
