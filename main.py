@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-TRACCAR_URL = ' https://syndrome-effectively-acceptable-promotion.trycloudflare.com '
+TRACCAR_URL = 'https://syndrome-effectively-acceptable-promotion.trycloudflare.com'
 
 TRACCAR_USER = 'hassanzorkot204@gmail.com'
 TRACCAR_PASS = 'hassan@2004'
