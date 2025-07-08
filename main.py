@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-TRACCAR_URL =  'https://emerging-asking-polymer-held.trycloudflare.com' 
+TRACCAR_URL =  'https://map.gpstraccar.xyz' 
 
 TRACCAR_USER = 'hassanzorkot204@gmail.com'
 TRACCAR_PASS = 'hassan@2004'
