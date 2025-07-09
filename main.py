@@ -61,7 +61,7 @@ def show_map(imei):
                 }}).addTo(map);
 
                 const truckIcon = L.icon({{
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/743/743007.png',
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3097/3097144.png',
                     iconSize: [40, 40],
                     iconAnchor: [20, 20]
                 }});
