@@ -9,37 +9,67 @@ TRACCAR_URL = 'https://map.gpstraccar.xyz'
 TRACCAR_USER = 'hassanzorkot204@gmail.com'
 TRACCAR_PASS = 'hassan@2004'
 
-# 🟢 Route de test pour vérifier que l'API fonctionne
+# 🟢 Route de test simple
 @app.route('/')
 def home():
     return "🚚 API Traccar GPS - Fonctionne ✅"
 
 @app.route('/health')
 def health():
-    return jsonify({"status": "OK", "message": "API fonctionne"})
+    return jsonify({"status": "OK", "timestamp": "2025-07-17"})
 
-# 🟢 Route 1 : Carte pour UN seul IMEI
+@app.route('/test-traccar')
+def test_traccar():
+    try:
+        response = requests.get(f'{TRACCAR_URL}/api/session', 
+                              auth=(TRACCAR_USER, TRACCAR_PASS), 
+                              timeout=10)
+        return jsonify({
+            "traccar_status": response.status_code,
+            "traccar_url": TRACCAR_URL,
+            "message": "Test connexion Traccar"
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "traccar_url": TRACCAR_URL,
+            "message": "Erreur connexion Traccar"
+        })
+
+# 🟢 Route 1 : Carte pour UN seul IMEI (avec gestion d'erreur améliorée)
 @app.route('/map/<imei>')
 def show_map(imei):
     try:
-        devices_resp = requests.get(f'{TRACCAR_URL}/api/devices', auth=(TRACCAR_USER, TRACCAR_PASS))
+        print(f"Requête reçue pour IMEI: {imei}")
+        
+        # Récupération des devices
+        devices_resp = requests.get(f'{TRACCAR_URL}/api/devices', 
+                                   auth=(TRACCAR_USER, TRACCAR_PASS),
+                                   timeout=30)
         devices_resp.raise_for_status()
         devices = devices_resp.json()
+        
         device = next((d for d in devices if d['uniqueId'] == imei), None)
         if not device:
             return f"<h3>❌ Aucun appareil trouvé pour l'IMEI {imei}</h3>", 404
 
         device_id = device['id']
         device_name = device.get('name', 'Camion')
-        positions_resp = requests.get(f'{TRACCAR_URL}/api/positions', auth=(TRACCAR_USER, TRACCAR_PASS))
+        
+        # Récupération des positions
+        positions_resp = requests.get(f'{TRACCAR_URL}/api/positions', 
+                                     auth=(TRACCAR_USER, TRACCAR_PASS),
+                                     timeout=30)
         positions_resp.raise_for_status()
         positions = positions_resp.json()
+        
         position = next((p for p in positions if p['deviceId'] == device_id), None)
         if not position:
             return f"<h3>❌ Aucune position trouvée pour l'appareil {device_name}</h3>", 404
 
         lat = position['latitude']
         lon = position['longitude']
+        
         html = f'''
         <!DOCTYPE html>
         <html>
@@ -68,34 +98,48 @@ def show_map(imei):
         </html>
         '''
         return html
+        
+    except requests.exceptions.RequestException as e:
+        return f"<h3>❌ Erreur de connexion Traccar: {str(e)}</h3>", 500
     except Exception as e:
-        return f"<h3>❌ Erreur : {str(e)}</h3>", 500
+        return f"<h3>❌ Erreur générale: {str(e)}</h3>", 500
 
-# 🟢 Route 2 : Carte pour PLUSIEURS IMEI
+# 🟢 Route 2 : Carte pour PLUSIEURS IMEI (avec gestion d'erreur améliorée)
 @app.route('/map_multi')
 def show_multiple():
     imeis = request.args.get('imeis')
     if not imeis:
         return "<h3>❌ Aucun IMEI fourni</h3>", 400
 
-    imei_list = imeis.split(',')
+    imei_list = [imei.strip() for imei in imeis.split(',')]
+    
     try:
-        devices_resp = requests.get(f'{TRACCAR_URL}/api/devices', auth=(TRACCAR_USER, TRACCAR_PASS))
-        positions_resp = requests.get(f'{TRACCAR_URL}/api/positions', auth=(TRACCAR_USER, TRACCAR_PASS))
+        print(f"Requête reçue pour IMEIs: {imei_list}")
+        
+        # Récupération des données
+        devices_resp = requests.get(f'{TRACCAR_URL}/api/devices', 
+                                   auth=(TRACCAR_USER, TRACCAR_PASS),
+                                   timeout=30)
+        positions_resp = requests.get(f'{TRACCAR_URL}/api/positions', 
+                                     auth=(TRACCAR_USER, TRACCAR_PASS),
+                                     timeout=30)
+        
         devices_resp.raise_for_status()
         positions_resp.raise_for_status()
+        
         devices = devices_resp.json()
         positions = positions_resp.json()
 
         markers = []
         for imei in imei_list:
-            imei = imei.strip()
             device = next((d for d in devices if d['uniqueId'] == imei), None)
             if not device:
                 continue
+                
             device_id = device['id']
             device_name = device.get('name', f'Device {imei}')
             position = next((p for p in positions if p['deviceId'] == device_id), None)
+            
             if position:
                 markers.append({
                     'name': device_name,
@@ -140,10 +184,10 @@ def show_multiple():
         </html>
         '''
         return html
+        
+    except requests.exceptions.RequestException as e:
+        return f"<h3>❌ Erreur de connexion Traccar: {str(e)}</h3>", 500
     except Exception as e:
-        return f"<h3>❌ Erreur : {str(e)}</h3>", 500
+        return f"<h3>❌ Erreur générale: {str(e)}</h3>", 500
 
-# 🔁 Démarrage dynamique
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
+# PAS de if __name__ == '__main__' pour éviter les conflits avec Gunicorn
