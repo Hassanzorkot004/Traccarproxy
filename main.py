@@ -9,6 +9,15 @@ TRACCAR_URL = 'https://map.gpstraccar.xyz'
 TRACCAR_USER = 'hassanzorkot204@gmail.com'
 TRACCAR_PASS = 'hassan@2004'
 
+# 🟢 Route de test pour vérifier que l'API fonctionne
+@app.route('/')
+def home():
+    return "🚚 API Traccar GPS - Fonctionne ✅"
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "OK", "message": "API fonctionne"})
+
 # 🟢 Route 1 : Carte pour UN seul IMEI
 @app.route('/map/<imei>')
 def show_map(imei):
@@ -137,4 +146,4 @@ def show_multiple():
 # 🔁 Démarrage dynamique
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=False, host="0.0.0.0", port=port)
